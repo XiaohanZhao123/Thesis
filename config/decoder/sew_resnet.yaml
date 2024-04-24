@@ -1,0 +1,3 @@
+name: sew_resnet
+pretrained: False
+cnf: 'ADD'          

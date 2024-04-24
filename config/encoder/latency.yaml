@@ -1,0 +1,4 @@
+name: latency
+T: 4
+tau: 2.0
+threshold: 0.001

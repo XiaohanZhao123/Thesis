@@ -1,0 +1,14 @@
+name: train_network
+epoch: 200
+seed: 42
+loss: cross_entropy
+
+
+datamodule:
+  num_workers: 6
+  batch_size: 128
+  split_propotion: 0.2
+  pin_memory: True
+
+
+in_channels: none
