@@ -14,16 +14,15 @@ from torch import nn
 from utils import get_encoder, get_decoder, get_dataset
 
 
-def load_callbacks():
+def load_callbacks(cfg: DictConfig):
     callbacks = []
-    callbacks.append(
-        plc.EarlyStopping(monitor="val_acc", mode="max", patience=10, min_delta=0.001)
-    )
 
     callbacks.append(
         plc.ModelCheckpoint(
             monitor="val_acc",
             filename="best-{epoch:02d}-{val_acc:.3f}",
+            dirpath=f'./resources/models/{cfg.dataset.name}_{cfg.encoder.name}_{cfg.decoder.name}',
+            save_weights_only=True,
             save_top_k=1,
             mode="max",
             save_last=True,
@@ -59,10 +58,14 @@ def main(cfg: DictConfig):
     logger = WandbLogger(project="thesis", name=cfg.name, config=config)
     trainer = Trainer(
         logger=logger,
-        callbacks=load_callbacks(),
-        max_epochs=cfg.epochs,
+        callbacks=load_callbacks(cfg),
+        max_epochs=cfg.epoch,
         devices=cfg.devices,
         precision="16-mixed",
     )
     trainer.fit(model, datamodule)
-    trainer.test(model, datamodule.test_dataloader)
+    trainer.test(model, datamodule)
+
+
+if __name__ == "__main__":
+    main()

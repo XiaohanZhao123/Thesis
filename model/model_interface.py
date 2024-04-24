@@ -50,7 +50,7 @@ class EncoderDecoder(pl.LightningModule):
         assert optimizer_cls is not None, f'Optimizer {optimizer_name} not found'
         
         optimizer = optimizer_cls(self.parameters(), **self.cfg.optimizer.kwargs)
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.cfg.epochs)
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.cfg.epoch)
         
         return [optimizer], [scheduler]
     
