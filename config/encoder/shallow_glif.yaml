@@ -1,5 +1,4 @@
-name: shallow 
+name: shallow_glif
 in_channels: ${dataset.channels}
 out_channels: 32
 T: 4
-path: null

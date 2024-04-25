@@ -1,0 +1,5 @@
+name: shallow_repeat
+in_channels: ${dataset.channels}
+out_channels: 32
+T: 4
+path: resources/autoencoders/cifar10_shallow_repeat_shallow/encoder.pth

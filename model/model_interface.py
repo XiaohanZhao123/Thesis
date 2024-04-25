@@ -76,6 +76,8 @@ class AutoEncoder(pl.LightningModule):
         self.cfg = cfg
 
     def forward(self, x):
+        functional.reset_net(self.encoder)
+        functional.reset_net(self.decoder)
         spikes = self.encoder(x)
         img = self.decoder(spikes)
         return img, spikes
@@ -120,3 +122,14 @@ class AutoEncoder(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         return self.training_step(batch, batch_idx)
+    
+    
+    def configure_optimizers(self):
+        optimizer_name = self.cfg.optimizer.name
+        optimizer_cls = getattr(optim, optimizer_name)
+        assert optimizer_cls is not None, f"Optimizer {optimizer_name} not found"
+
+        optimizer = optimizer_cls(self.parameters(), **self.cfg.optimizer.kwargs)
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.cfg.epoch)
+
+        return [optimizer], [scheduler]

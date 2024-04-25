@@ -1,6 +1,6 @@
 defaults:
   - dataset: cifar
-  - encoder: direct
+  - encoder: shallow_repeat
   - decoder: sew_resnet
   - optimizer: sgd
 
@@ -19,4 +19,4 @@ datamodule:
 
 
 devices: [0]
-in_channels: ${encoder.out_channels}
+in_channels: 

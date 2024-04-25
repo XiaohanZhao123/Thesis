@@ -10,8 +10,10 @@ from data import DataInterface
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import wandb
+import torch
 from torch import nn
 from utils import get_encoder, get_autodecoder, get_dataset
+import pathlib
 
 
 def load_callbacks(cfg: DictConfig):
@@ -19,12 +21,12 @@ def load_callbacks(cfg: DictConfig):
 
     callbacks.append(
         plc.ModelCheckpoint(
-            monitor="val_acc",
+            monitor="val_loss",
             filename="best-{epoch:02d}-{val_acc:.3f}",
-            dirpath=f"./resources/models/{cfg.dataset.name}_{cfg.encoder.name}_{cfg.decoder.name}",
+            dirpath=f"./resources/autoencoders/{cfg.dataset.name}_{cfg.encoder.name}_{cfg.decoder.name}",
             save_weights_only=True,
             save_top_k=1,
-            mode="max",
+            mode="min",
             save_last=True,
         )
     )
@@ -45,7 +47,7 @@ def get_loss_function(loss):
     raise ValueError("Unknown loss function")
 
 
-@hydra.main(config_path="config", config_name="train", version_base=None)
+@hydra.main(config_path="config", config_name="train_autoencoder", version_base=None)
 def main(cfg: DictConfig):
     pl.seed_everything(cfg.seed)
     train_data, val_data = get_dataset(cfg)
@@ -65,7 +67,7 @@ def main(cfg: DictConfig):
         cfg=cfg,
     )
     config = OmegaConf.to_container(cfg, resolve=True)
-    logger = WandbLogger(project="thesis", name=cfg.name, config=config)
+    logger = WandbLogger(project="autoeencoder", name=cfg.name, config=config)
     trainer = Trainer(
         logger=logger,
         callbacks=load_callbacks(cfg),
@@ -74,6 +76,14 @@ def main(cfg: DictConfig):
         precision="16-mixed",
     )
     trainer.fit(model, datamodule)
+    # save the encoder
+    path_dir = f"./resources/autoencoders/{cfg.dataset.name}_{cfg.encoder.name}_{cfg.decoder.name}_{cfg.encoder.T}/encoder.pth"
+    if not os.path.exists(pathlib.Path(path_dir).parent):
+        os.makedirs(pathlib.Path(path_dir).parent)
+    torch.save(
+        encoder.state_dict(),
+        path_dir,
+    )
     trainer.test(model, datamodule)
 
 

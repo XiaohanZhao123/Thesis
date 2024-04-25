@@ -8,6 +8,9 @@ from model import (
     LatencyEncoder,
     ShallowEncoder,
     ShallowDecoder,
+    ShallowEncoderRepat,
+    ShallowEncoderGLIF,
+    LSTMEncoder,
 )
 from spikingjelly.activation_based.model import sew_resnet, spiking_vgg, spiking_resnet
 from spikingjelly.activation_based.neuron import LIFNode
@@ -27,6 +30,9 @@ encoder_dict = {
     "latency": LatencyEncoder,
     "direct": DirecEncoder,
     "shallow": ShallowEncoder,
+    "shallow_repeat": ShallowEncoderRepat,
+    "shallow_glif": ShallowEncoderGLIF,
+    "lstm": LSTMEncoder,
 }
 
 decoder_dict = {
@@ -41,7 +47,15 @@ def get_encoder(cfg: DictConfig):
     encoder = encoder_dict[cfg.encoder.name]
     kwargs = OmegaConf.to_container(cfg.encoder, resolve=True)
     del kwargs["name"]
+    if hasattr(cfg.encoder, 'path'):
+        del kwargs["path"]  
     encoder_net = encoder(**kwargs)
+    if hasattr(cfg.encoder, 'path') and cfg.encoder.path is not None:
+        encoder_net.load_state_dict(torch.load(cfg.encoder.path))
+        # free encoder net
+        for param in encoder_net.parameters():
+            param.requires_grad = False
+    
     functional.set_step_mode(encoder_net, "m")
     functional.set_backend(encoder_net, "torch")
     return encoder_net
@@ -57,7 +71,7 @@ def get_decoder(cfg: DictConfig):
         surrogate_function=ATan(),
         **kwargs
     )
-    if cfg.dataset.channels != 3:
+    if cfg.dataset.channels != 3 or hasattr(cfg, "in_channels"):
         in_channels = (
             cfg.dataset.channels if cfg.in_channels is None else cfg.in_channels
         )
@@ -69,6 +83,7 @@ def get_decoder(cfg: DictConfig):
             padding=decoder_net.conv1.padding,
             bias=decoder_net.conv1.bias is not None,
         )
+        
     functional.set_step_mode(decoder_net, "m")
     functional.set_backend(decoder_net, "torch")
     return decoder_net
@@ -84,6 +99,8 @@ def get_autodecoder(cfg: DictConfig):
         T=cfg.encoder.T,
         **kwargs
     )
+    functional.set_step_mode(decoder_net, "m")
+    functional.set_backend(decoder_net, "torch")
 
     return decoder_net
 

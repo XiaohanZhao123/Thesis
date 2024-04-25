@@ -1,16 +1,16 @@
 defaults:
   - dataset: cifar
-  - encoder: direct
-  - decoder: sew_resnet
+  - encoder: shallow_repeat
+  - decoder: shallow
   - optimizer: sgd
 
 
-name: train_network
-epoch: 200
+name: autoencoder
+epoch: 64
 seed: 42
-reconstruction: mse
+reconstruction_loss: mse
 sparse_penalty: l1
-lamda: 0.5
+lamda: 0.01
 
 
 datamodule:
@@ -21,4 +21,4 @@ datamodule:
 
 
 devices: [0]
-in_channels: 8
+in_channels: 32

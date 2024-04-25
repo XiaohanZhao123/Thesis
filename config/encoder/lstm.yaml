@@ -1,0 +1,5 @@
+name: lstm
+img_size: ${dataset.size}
+in_channels: ${dataset.channels}
+out_channels: 3
+T: 4
