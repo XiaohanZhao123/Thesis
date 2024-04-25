@@ -1,3 +1,5 @@
 /wandb
 /outputs
 /resources
+__pycache__
+**.out

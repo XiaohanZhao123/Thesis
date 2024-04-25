@@ -2,7 +2,13 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from torchvision import datasets
 from torchvision import transforms
-from model import DirecEncoder, RateEncoder, LatencyEncoder
+from model import (
+    DirecEncoder,
+    RateEncoder,
+    LatencyEncoder,
+    ShallowEncoder,
+    ShallowDecoder,
+)
 from spikingjelly.activation_based.model import sew_resnet, spiking_vgg, spiking_resnet
 from spikingjelly.activation_based.neuron import LIFNode
 from spikingjelly.activation_based.surrogate import ATan
@@ -20,12 +26,14 @@ encoder_dict = {
     "rate": RateEncoder,
     "latency": LatencyEncoder,
     "direct": DirecEncoder,
+    "shallow": ShallowEncoder,
 }
 
 decoder_dict = {
     "sew_resnet": sew_resnet.sew_resnet34,
     "spiking_vgg": spiking_vgg.spiking_vgg11_bn,
     "spiking_resnet": spiking_resnet.spiking_resnet34,
+    "shallow": ShallowDecoder,
 }
 
 
@@ -34,8 +42,8 @@ def get_encoder(cfg: DictConfig):
     kwargs = OmegaConf.to_container(cfg.encoder, resolve=True)
     del kwargs["name"]
     encoder_net = encoder(**kwargs)
-    functional.set_step_mode(encoder_net, 'm')
-    functional.set_backend(encoder_net, 'torch')
+    functional.set_step_mode(encoder_net, "m")
+    functional.set_backend(encoder_net, "torch")
     return encoder_net
 
 
@@ -44,7 +52,10 @@ def get_decoder(cfg: DictConfig):
     kwargs = OmegaConf.to_container(cfg.decoder, resolve=True)
     del kwargs["name"]
     decoder_net = decoder(
-        num_classes=cfg.dataset.num_classes, spiking_neuron=LIFNode, surrogate_function=ATan(), **kwargs
+        num_classes=cfg.dataset.num_classes,
+        spiking_neuron=LIFNode,
+        surrogate_function=ATan(),
+        **kwargs
     )
     if cfg.dataset.channels != 3:
         in_channels = (
@@ -58,8 +69,22 @@ def get_decoder(cfg: DictConfig):
             padding=decoder_net.conv1.padding,
             bias=decoder_net.conv1.bias is not None,
         )
-    functional.set_step_mode(decoder_net, 'm')
-    functional.set_backend(decoder_net, 'torch')
+    functional.set_step_mode(decoder_net, "m")
+    functional.set_backend(decoder_net, "torch")
+    return decoder_net
+
+
+def get_autodecoder(cfg: DictConfig):
+    decoder = decoder_dict[cfg.decoder.name]
+    kwargs = OmegaConf.to_container(cfg.decoder, resolve=True)
+    del kwargs["name"]
+    decoder_net = decoder(
+        in_channels=cfg.in_channels,
+        out_channels=cfg.dataset.channels,
+        T=cfg.encoder.T,
+        **kwargs
+    )
+
     return decoder_net
 
 

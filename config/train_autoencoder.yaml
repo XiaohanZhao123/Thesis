@@ -8,7 +8,9 @@ defaults:
 name: train_network
 epoch: 200
 seed: 42
-loss: cross_entropy
+reconstruction: mse
+sparse_penalty: l1
+lamda: 0.5
 
 
 datamodule:
@@ -19,4 +21,4 @@ datamodule:
 
 
 devices: [0]
-in_channels: ${encoder.out_channels}
+in_channels: 8

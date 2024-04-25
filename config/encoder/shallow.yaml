@@ -1,0 +1,4 @@
+name: shallow 
+in_channels: ${dataset.channels}
+out_channels: 32
+T: 4
