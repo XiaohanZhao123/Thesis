@@ -1,0 +1,7 @@
+name: mnist
+path: resources/dataset/mnist
+num_classes: 10
+size: 32
+mean: [0.1307]
+std: [0.3081]
+channels: 1

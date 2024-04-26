@@ -1,0 +1,7 @@
+name: fmnist
+path: resources/dataset/fmnist
+num_classes: 10
+size: 32
+mean: [0.2860]
+std: [0.3530]
+channels: 1
