@@ -1,1 +1,2 @@
 name: simplenet
+in_channels: ${dataset.channels}
